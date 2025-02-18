@@ -8,7 +8,7 @@ win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Solar System Model")
 
 BG_IMG = pygame.image.load("stars-galaxy.jpg")
-SCALE = 250e6 / 400
+SCALE = 1700e6 / 400
 TIMESTEP = 3600 * 24  # 1 day in seconds
 SEC_PER_YEAR = 10
 FPS = 90
@@ -69,11 +69,13 @@ def main():
 
     # create planets
     planets = \
-        [Planet("Sun", 1.98892e30, 0, (255, 204, 51), 30, 0, 0, True),
-         Planet("Mercury", 0.33e24, 57.8952e6, (56, 56, 56), 5, 0, 47.4),
-         Planet("Venus", 4.8685e24, 108.1608e6, (230, 230, 230), 10, 90, 35.02),
-         Planet("Earth", 5.97e24, 149.6e6, (47, 106, 105), 12, 180, 29.783),
-         Planet("Mars", 0.639e24, 227.9904e6, (153, 61, 0), 9, 270, 24.077)]
+        [Planet("Sun", 1.98892e30, 0, (255, 204, 51), 5, 0, 0, True),
+         Planet("Mercury", 0.33e24, 57.8952e6, (56, 56, 56), 1, 0, 47.4),
+         Planet("Venus", 4.8685e24, 108.1608e6, (230, 230, 230), 2, 90, 35.02),
+         Planet("Earth", 5.97e24, 149.6e6, (47, 106, 105), 2, 180, 29.783),
+         Planet("Mars", 0.639e24, 227.9904e6, (153, 61, 0), 2, 270, 24.077),
+         Planet("Jupiter", 1898e24, 778.5e6, (176, 127, 53), 4, 270, 13.1),
+         Planet("Saturn", 568e24, 1432.0e6, (176, 143, 54), 4, 270, 9.7)]
 
     running = True
     clock = pygame.time.Clock()
