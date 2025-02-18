@@ -2,15 +2,19 @@ import pygame
 import math
 
 pygame.init()
+
 WIDTH, HEIGHT = 800, 800
 win = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Solar System Model")
+
 BG_IMG = pygame.image.load("stars-galaxy.jpg")
 SCALE = 250e6 / 400
-FPS = 30
+TIMESTEP = 3600 * 24  # 1 day in seconds
 SEC_PER_YEAR = 10
+FPS = 90
+
 SEC_PER_FRAME = 3600 * 24 * 365 / (FPS * SEC_PER_YEAR)
-G = 6.67e-11  # N.m2/kg2
+G = 6.67428e-11  # N.m2/kg2
 
 
 class Planet:
@@ -27,45 +31,54 @@ class Planet:
 
         self.ax_kms2 = 0
         self.ay_kms2 = 0
+        self.orbit_point = [(int(WIDTH / 2 + self.x_km / SCALE - self.radius_px / 2),
+                                             int(HEIGHT / 2 + self.y_km / SCALE - self.radius_px / 2))]
 
-
-    def gravity(self, other):
+    def gravity(self, planets):
         # gravity adds the acceleration from another planet
-        dx_km = other.x_km - self.x_km
-        dy_km = other.y_km - self.y_km
-        dist_m_sqr = (dx_km * 1e3) ** 2 + (dy_km * 1e3) ** 2
-        grav_amp = G * other.mass_kg / dist_m_sqr
-        grav_ang = math.atan2(dy_km, dx_km)
-        self.ax_kms2 += grav_amp * math.cos(grav_ang) / 1000
-        self.ay_kms2 += grav_amp * math.sin(grav_ang) / 1000
+
+        for other in planets:
+            if other.name != self.name:
+                dx_km = other.x_km - self.x_km
+                dy_km = other.y_km - self.y_km
+                dist_m_sqr = (dx_km * 1e3) ** 2 + (dy_km * 1e3) ** 2
+                grav_amp = G * other.mass_kg / dist_m_sqr
+                grav_ang = math.atan2(dy_km, dx_km)
+                self.ax_kms2 += grav_amp * math.cos(grav_ang) / 1000
+                self.ay_kms2 += grav_amp * math.sin(grav_ang) / 1000
 
     def advance(self, period_s):
-        self.x_km += self.vx_kms * period_s
-        self.y_km += self.vy_kms * period_s
         self.vx_kms += self.ax_kms2 * period_s
         self.vy_kms += self.ay_kms2 * period_s
-        print(f"vx: {self.vx_kms}, vy: {self.vy_kms}, vtotal: {math.sqrt(self.vx_kms**2 + self.vy_kms**2)}")
+        self.x_km += self.vx_kms * period_s
+        self.y_km += self.vy_kms * period_s
+        # print(f"{self.name} orbit: {math.sqrt(self.x_km**2 + self.y_km**2)}")
         self.ax_kms2 = 0
         self.ay_kms2 = 0
+        self.orbit_point.append((int(WIDTH / 2 + self.x_km / SCALE - self.radius_px / 2),
+                                             int(HEIGHT / 2 + self.y_km / SCALE - self.radius_px / 2)))
 
     def draw(self):
         pygame.draw.circle(win, self.color, (int(WIDTH / 2 + self.x_km / SCALE - self.radius_px / 2),
                                              int(HEIGHT / 2 + self.y_km / SCALE - self.radius_px / 2)), self.radius_px)
+        if not self.is_star:
+            pygame.draw.lines(win, self.color, False, self.orbit_point, 2)
 
 
 def main():
 
     # create planets
     planets = \
-        [Planet("Sun", 1.989e30, 0, (255, 204, 51), 30, 0, 0, True),
-         Planet("Mercury", 0.3285e24, 57.9e6, (56, 56, 56), 5, 0, 47.4)]#,
-         #Planet("Venus", 4.87e24, 108.2e6, (230, 230, 230), 10, 90, 35.0),
-         #Planet("Earth", 5.97e24, 149.6e6, (47, 106, 105), 12, 180, 29.8),
-         #Planet("Mars", 0.642e24, 228.0e6, (153, 61, 0), 9, 270, 24.1)]
+        [Planet("Sun", 1.98892e30, 0, (255, 204, 51), 30, 0, 0, True),
+         Planet("Mercury", 0.33e24, 57.8952e6, (56, 56, 56), 5, 0, 47.4),
+         Planet("Venus", 4.8685e24, 108.1608e6, (230, 230, 230), 10, 90, 35.02),
+         Planet("Earth", 5.97e24, 149.6e6, (47, 106, 105), 12, 180, 29.783),
+         Planet("Mars", 0.639e24, 227.9904e6, (153, 61, 0), 9, 270, 24.077)]
 
     running = True
     clock = pygame.time.Clock()
 
+    day_count = 0.0
     while running:
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -74,12 +87,12 @@ def main():
 
         win.blit(BG_IMG, (0, 0))
         for planet in planets:
+            planet.gravity(planets)
             if not planet.is_star:
-            #    for other in planets:
-            #        if other.name != planet.name:
-                planet.gravity(planets[0])
-                planet.advance(SEC_PER_FRAME)
+                planet.advance(TIMESTEP)
             planet.draw()
+        day_count += 0.25
+        # print(f"day count: {day_count}")
 
         pygame.display.update()
     pygame.quit()
